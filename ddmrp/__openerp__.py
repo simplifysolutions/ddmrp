@@ -6,7 +6,7 @@
 
 {
     "name": "DDMRP",
-    "summary": "Demand-driven MRP",
+    "summary": "Demand Driven Material Requirements Planning",
     "version": "9.0.2.1.0",
     "author": "Eficent,"
               "Aleph Objects, Inc.,"
@@ -14,7 +14,7 @@
     "website": "http://www.eficent.com",
     "category": "Warehouse Management",
     "depends": ["purchase",
-                "mrp",
+                "mrp_bom_location",
                 "web_tree_dynamic_colored_field",
                 "stock_warehouse_orderpoint_stock_info",
                 "stock_warehouse_orderpoint_stock_info_unreserved",
@@ -36,7 +36,8 @@
              "views/stock_warehouse_orderpoint_view.xml",
              "views/procurement_order_view.xml",
              "views/mrp_production_view.xml",
-             "data/ir_cron.xml"
+             "views/mrp_bom_view.xml",
+             "data/ir_cron.xml",
              ],
     "demo": [
         "demo/ddmrp_product_category_demo.xml",
