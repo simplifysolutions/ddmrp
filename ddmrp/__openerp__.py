@@ -6,7 +6,7 @@
 
 {
     "name": "DDMRP",
-    "summary": "Demand-driven MRP",
+    "summary": "Demand Driven Material Requirements Planning",
     "version": "9.0.2.1.0",
     "author": "Eficent,"
               "Aleph Objects, Inc.,"
@@ -22,7 +22,8 @@
                 "stock_orderpoint_uom",
                 "stock_orderpoint_manual_procurement",
                 "stock_demand_estimate",
-                "web_widget_bokeh_chart"],
+                "web_widget_bokeh_chart",
+                "base_cron_exclusion"],
     "data": ["data/product_adu_calculation_method_data.xml",
              "data/stock_buffer_profile_variability_data.xml",
              "data/stock_buffer_profile_lead_time_data.xml",
