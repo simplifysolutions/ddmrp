@@ -33,18 +33,17 @@ class StockWarehouseOrderpoint(models.Model):
             _logger.info(
                 "DAF=%s applied to %s. ADU: %s -> %s" %
                 (daf, self.name, prev, self.adu))
-            # TODO: compute generated demand and apply to components...
+            # Compute generated demand to be applied to components:
             increased_demand = self.adu - prev
             self.explode_demand_to_components(
                 increased_demand, self.product_uom)
-        # Add demand related to DAFs applied to parent buffers.
-        self.adu += self.extra_demand # FIXME: how not to sum again??
         return res
 
-    extra_demand = fields.Float(
-        string="Extra Demand",
+    extra_demand_ids = fields.One2many(
+        comodel_name="ddmrp.adjustment.demand", string="Extra Demand",
+        inverse_name="buffer_id",
         help="Demand associated to Demand Adjustment Factors applied to "
-             "parent buffers")
+             "parent buffers.")
 
     def _get_init_bom(self):
         # TODO: This is on pull/13 and its the correct method. Need to adapt
@@ -67,8 +66,10 @@ class StockWarehouseOrderpoint(models.Model):
 
     def explode_demand_to_components(self, demand, uom_id):
         uom_obj = self.env['product.uom']
+        demand_obj = self.env['ddmrp.adjustment.demand']
         init_bom = self._get_init_bom()
-        self.ensure_one()
+        if not init_bom:
+            return
 
         def _get_extra_demand(bom, line, buffer_id, factor):
             qty = factor * line.product_qty / bom.product_qty
@@ -81,9 +82,20 @@ class StockWarehouseOrderpoint(models.Model):
             for line in bom.bom_line_ids:
                 buffer_id = self.search([
                     ('product_id', '=', line.product_id.id)], limit=1)  # TODO: pull/13: filter by location also
-                if buffer_id: # TODO: In #13 the buffered flag is added to bom
-                    buffer_id.extra_demand += _get_extra_demand(
+                if buffer_id:  # TODO: In #13 the buffered flag is added to bom
+                    extra_demand = _get_extra_demand(
                         bom, line, buffer_id, factor)
+                    existing = demand_obj.search([
+                        ('buffer_id', '=', buffer_id.id),
+                        ('buffer_origin_id', '=', self.id)], limit=1)
+                    if existing:
+                        existing.write({'extra_demand': extra_demand})
+                    else:
+                        demand_obj.create({
+                            'buffer_id': buffer_id.id,
+                            'buffer_origin_id': self.id,
+                            'extra_demand': extra_demand,
+                        })
                 # location = line.location_id  # TODO: pull/13: with locations:
                 line_boms = line.product_id.bom_ids
                 # bom = line_boms.filtered(
@@ -91,7 +103,7 @@ class StockWarehouseOrderpoint(models.Model):
                 #     line_boms.filtered(lambda b: not b.location_id) # TODO: pull/13: with locations:
                 child_bom = line_boms
                 if child_bom:
-                    line_qty = self.env['product.uom']._compute_qty_obj(
+                    line_qty = uom_obj._compute_qty_obj(
                         line.product_uom, line.product_qty,
                         child_bom.product_uom)
                     new_factor = factor * line_qty / bom.product_qty
@@ -101,3 +113,13 @@ class StockWarehouseOrderpoint(models.Model):
             uom_id, demand, init_bom.product_uom)
         _create_demand(init_bom, factor=initial_factor)
         return True
+
+    @api.model
+    def cron_ddmrp(self, automatic=False):
+        """Apply extra demand originated by Demand Adjustment Factors to
+        components after the cron update of all the buffers."""
+        self.env['ddmrp.adjustment.demand'].search([]).unlink()
+        super(StockWarehouseOrderpoint, self).cron_ddmrp(automatic)
+        for op in self.search([]).filtered('extra_demand_ids'):
+            op.adu += sum(op.extra_demand_ids.mapped('extra_demand'))
+            _logger.info("DAFs-originated demand applied.")
