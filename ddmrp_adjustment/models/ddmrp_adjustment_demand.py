@@ -14,5 +14,6 @@ class DdmrpAdjustmentDemand(models.Model):
     buffer_origin_id = fields.Many2one(
         comodel_name="stock.warehouse.orderpoint", string="Originated from")
     extra_demand = fields.Float(string="Extra Demand")
-
-    # TODO: security
+    product_uom_id = fields.Many2one(
+        comodel_name="product.uom", string="Unit of Measure",
+        related="buffer_id.product_uom")

@@ -89,9 +89,9 @@ class StockWarehouseOrderpoint(models.Model):
                         ('buffer_id', '=', buffer_id.id),
                         ('buffer_origin_id', '=', self.id)], limit=1)
                     if existing:
-                        existing.write({'extra_demand': extra_demand})
+                        existing.sudo().write({'extra_demand': extra_demand})
                     else:
-                        demand_obj.create({
+                        demand_obj.sudo().create({
                             'buffer_id': buffer_id.id,
                             'buffer_origin_id': self.id,
                             'extra_demand': extra_demand,
@@ -123,3 +123,16 @@ class StockWarehouseOrderpoint(models.Model):
         for op in self.search([]).filtered('extra_demand_ids'):
             op.adu += sum(op.extra_demand_ids.mapped('extra_demand'))
             _logger.info("DAFs-originated demand applied.")
+
+    @api.multi
+    def action_view_demand_to_components(self):
+        demand_ids = self.env["ddmrp.adjustment.demand"].search([
+            ('buffer_origin_id', '=', self.id)]).ids
+        return {
+            "name": _("Demand Allocated to Components"),
+            "type": "ir.actions.act_window",
+            "res_model": "ddmrp.adjustment.demand",
+            "view_type": "form",
+            "view_mode": "tree",
+            "domain": [('id', 'in', demand_ids)],
+        }
