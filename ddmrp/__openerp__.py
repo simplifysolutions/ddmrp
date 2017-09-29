@@ -37,6 +37,7 @@
              "views/procurement_order_view.xml",
              "views/mrp_production_view.xml",
              "views/mrp_bom_view.xml",
+             "views/report_mrpbomstructure.xml",
              "data/ir_cron.xml",
              ],
     "demo": [
