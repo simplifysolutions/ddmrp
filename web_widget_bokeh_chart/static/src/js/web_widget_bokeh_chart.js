@@ -1,21 +1,18 @@
-odoo.define('web_widget_bokeh_chart', function (require) {
-"use strict";
+openerp.web_widget_bokeh_chart = function (instance, local) {
+    var _t = instance.web._t,
+        _lt = instance.web._lt;
+    var QWeb = instance.web.qweb;
 
-    var core = require('web.core');
-    var form_common = require('web.form_common');
-    var formats = require('web.formats');
-    var Model = require('web.Model');
-
-    var QWeb = core.qweb;
-
-    var BokehChartWidget = form_common.AbstractField.extend({
+    instance.web.form.BokehChartWidget = instance.web.form.AbstractField.extend({
         render_value: function() {
             var val = this.get('value');
             this.$el.html(val);
-        }
+        },
+     
     });
-    core.form_widget_registry.add('bokeh_chart', BokehChartWidget);
-    return {
-        BokehChartWidget: BokehChartWidget
-    };
-});
+    instance.web.form.widgets = instance.web.form.widgets.extend({
+        'bokeh_chart': 'instance.web.form.BokehChartWidget',
+    });
+
+};
+
