@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
+    <data>
 
     <template id="assets_backend" name="web_widget_bokeh_chart assets"
               inherit_id="web.assets_backend">
@@ -12,4 +13,5 @@
         </xpath>
     </template>
 
+    </data>
 </openerp>
